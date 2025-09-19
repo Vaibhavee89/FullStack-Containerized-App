@@ -1,6 +1,6 @@
 import os
 import logging
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.exc import OperationalError
 import time
@@ -36,7 +36,7 @@ else:
                     )
                     # Test the connection
                     with engine.connect() as conn:
-                        conn.execute("SELECT 1")
+                        conn.execute(text("SELECT 1"))
                     logger.info(f"✅ Successfully connected to PostgreSQL database")
                     return engine
                 except OperationalError as e:

@@ -52,7 +52,13 @@ def check_database_tables():
     """Check what tables exist in the database"""
     db = SessionLocal()
     try:
-        result = db.execute(text("SELECT name FROM sqlite_master WHERE type='table';"))
+        # PostgreSQL query to list tables
+        result = db.execute(text("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            ORDER BY table_name;
+        """))
         tables = result.fetchall()
         print("\n=== Database Tables ===")
         for table in tables:

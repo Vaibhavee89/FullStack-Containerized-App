@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.routers import todos, admin, users
-from app.database import engine
+from app.database import engine, get_database_info
 from app import models
 from app.scheduler import start_scheduler, stop_scheduler
 
@@ -13,7 +13,7 @@ origins = [
     "http://localhost"
 ]
 
-# Create tables
+# Create tables (use Alembic for migrations in production)
 models.Base.metadata.create_all(bind=engine)
 
 @asynccontextmanager
@@ -34,7 +34,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include routers
+app.include_router(users.router)
+app.include_router(todos.router)
+app.include_router(admin.router)
+
+# Root endpoint
+@app.get("/")
+def read_root():
+    return {"message": "TaskMaster API is running!", "docs": "/docs"}
+
 # Health check endpoint
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "taskmaster-backend"}
+    db_info = get_database_info()
+    return {
+        "status": "healthy", 
+        "service": "taskmaster-backend",
+        "database": {
+            "type": "PostgreSQL" if db_info["is_postgresql"] else "SQLite",
+            "connected": True
+        }
+    }
